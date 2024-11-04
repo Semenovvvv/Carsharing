@@ -1,4 +1,6 @@
-﻿namespace BlazorApp1.Database.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace BlazorApp1.Database.Models
 {
     public class Client
     {

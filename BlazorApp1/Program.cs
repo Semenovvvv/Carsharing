@@ -1,8 +1,9 @@
 using BlazorApp1.Components;
-using BlazorApp1.Components.Pages;
 using BlazorApp1.Database;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using Microsoft.Extensions.Options;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace BlazorApp1
 {
@@ -11,29 +12,58 @@ namespace BlazorApp1
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
-            // Add services to the container.
             builder.Services.AddRazorComponents()
-            .AddInteractiveServerComponents();
+                .AddInteractiveServerComponents();
 
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection"); 
 
             builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
+            builder.Services.AddRazorPages();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                context.Database.EnsureCreated();
+            }
+
             if (!app.Environment.IsDevelopment())
             {
-                app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseExceptionHandler(exceptionHandlerApp =>
+                {
+                    exceptionHandlerApp.Run(async context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                        context.Response.ContentType = Text.Plain;
+
+                        await context.Response.WriteAsync("An exception was thrown.");
+
+                        var exceptionHandlerPathFeature =
+                            context.Features.Get<IExceptionHandlerPathFeature>();
+
+                        if (exceptionHandlerPathFeature?.Error is FileNotFoundException)
+                        {
+                            await context.Response.WriteAsync(" The file was not found.");
+                        }
+
+                        if (exceptionHandlerPathFeature?.Path == "/")
+                        {
+                            await context.Response.WriteAsync(" Page: Home.");
+                        }
+                    });
+                });
                 app.UseHsts();
             }
 
             app.UseHttpsRedirection();
+            app.UseStatusCodePages();
+
 
             app.UseStaticFiles();
             app.UseAntiforgery();
+
+            app.MapRazorPages();
 
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();

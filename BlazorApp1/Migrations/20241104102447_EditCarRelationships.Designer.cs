@@ -3,6 +3,7 @@ using System;
 using BlazorApp1.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BlazorApp1.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241104102447_EditCarRelationships")]
+    partial class EditCarRelationships
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,7 +46,7 @@ namespace BlazorApp1.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cars", (string)null);
+                    b.ToTable("Cars");
                 });
 
             modelBuilder.Entity("BlazorApp1.Database.Models.Client", b =>
@@ -71,7 +74,7 @@ namespace BlazorApp1.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Clients", (string)null);
+                    b.ToTable("Clients");
                 });
 
             modelBuilder.Entity("BlazorApp1.Database.Models.Order", b =>
@@ -91,9 +94,6 @@ namespace BlazorApp1.Migrations
                     b.Property<decimal>("TotalToPay")
                         .HasColumnType("numeric");
 
-                    b.Property<decimal>("TotalToPayWithDiscount")
-                        .HasColumnType("numeric");
-
                     b.Property<TimeSpan>("WorkTime")
                         .HasColumnType("interval");
 
@@ -103,7 +103,7 @@ namespace BlazorApp1.Migrations
 
                     b.HasIndex("ClientId");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("BlazorApp1.Database.Models.Order", b =>

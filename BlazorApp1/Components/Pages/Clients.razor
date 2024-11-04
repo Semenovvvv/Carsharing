@@ -1,0 +1,33 @@
+﻿@page "/clients"
+@rendermode InteractiveServer
+@using Database.Models
+@using Layout
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<BlazorApp1.Database.ApplicationDbContext> DbFactory
+
+<h3>Список клиентов</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Фамилия</th>
+            <th>Имя</th>
+            <th>Отчество</th>
+            <th>Скидка</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var client in DbFactory.CreateDbContextAsync().Result.Clients)
+        {
+            <tr>
+                <td>@(client.LastName)</td>
+                <td>@(client.FirstName)</td>
+                <td>@(client.Patronymic)</td>
+                <td>@client.BonusDiscount</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+
+}

@@ -1,0 +1,79 @@
+﻿@page "/addorder"
+@rendermode InteractiveServer
+@using Database.Models
+@using Layout
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<BlazorApp1.Database.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<div>
+    <a href="orders">Список заказов</a>
+</div>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="newOrder" OnValidSubmit="SaveOrder" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="name" class="form-label">Машина:</label>
+                <InputSelect @bind-Value="newOrder.CarId">
+                    @foreach (var car in DbFactory.CreateDbContext().Cars)
+                    {
+                        <option value="@car.Id">@($"{car.Brand} {car.Model}")</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => newOrder.CarId" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="name" class="form-label">Клиент:</label>
+                <InputSelect @bind-Value="newOrder.ClientId">
+                    @foreach (var client in DbFactory.CreateDbContext().Clients)
+                    {
+                        <option value="@client.Id">@($"{client.LastName} {client.FirstName} {client.Patronymic}")</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => newOrder.ClientId" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="dayscount" class="form-label">Время использования:</label>
+                <input type="time" class="form-control" @bind="workTime" placeholder="Время использования">
+                <ValidationMessage For="() => workTime" class="text-danger" />
+            </div>
+            <button type="submit" class="btn btn-primary">Добавить</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    DateTime workTime = new DateTime();
+    Order newOrder = new Order();
+
+    async void SaveOrder()
+    {
+        using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            var car = await context.Cars.FirstOrDefaultAsync(x => x.Id == newOrder.CarId);
+            var client = await context.Clients.FirstOrDefaultAsync(x => x.Id == newOrder.ClientId);
+            newOrder.WorkTime = workTime.TimeOfDay;
+            newOrder.TotalToPay = car.PricePerMinute * (decimal)newOrder.WorkTime.TotalMinutes;
+            newOrder.TotalToPayWithDiscount = newOrder.TotalToPay - (newOrder.TotalToPay * client.BonusDiscount);
+            await context.Orders.AddAsync(newOrder);
+            await context.SaveChangesAsync();
+        }
+
+        newOrder = new Order();
+        NavigationManager.NavigateTo("orders");
+    }
+
+    void CancelOrder()
+    {
+        newOrder = new Order();
+    }
+
+    protected override void OnInitialized()
+    {
+
+    }
+}

@@ -1,0 +1,47 @@
+﻿@page "/orders"
+@rendermode InteractiveServer
+@using Database.Models
+@using Layout
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<BlazorApp1.Database.ApplicationDbContext> DbFactory
+
+
+<h3>Список заказов</h3>
+
+<div>
+    <a href="addorder">Добавить заказ</a>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Номер заказа</th>
+            <th>ФИО клиента</th>
+            <th>Машина</th>
+            <th>Стоимость без скидки</th>
+            <th>Бонусная скидка, %</th>
+            <th>Итого к оплате</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var order in DbFactory.CreateDbContext().Orders)
+        {
+            <tr>
+                <td>@order.Id</td>
+                <td>@($"{order.Client.LastName} {order.Client.FirstName} {order.Client.Patronymic}")</td>
+                <td>@($"{order.Car.Brand} {order.Car.Model}")</td>
+                <td>@($"{order.TotalToPay}")</td>
+                <td>@($"{order.Client.BonusDiscount * 100} %")</td>
+                <td>@(order.TotalToPayWithDiscount)</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div style="align-items:flex-end">
+    <h4>Общая сумма по заказам: @DbFactory.CreateDbContext().Orders.Sum(x => x.TotalToPayWithDiscount)</h4>
+</div>
+
+@code {
+
+}
